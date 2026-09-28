@@ -103,8 +103,11 @@ function runDiagnostics(){
   ['Local storage',(()=>{try{localStorage.setItem('novaDiag','ok');localStorage.removeItem('novaDiag');return true}catch{return false}})(),'Browser storage available'],
   ['Calculator',(()=>{try{return safeCalc('17*29')===493}catch{return false}})(),'17*29 = 493'],
   ['CSV parser',csvParse('a,b\\n1,2').length===2,'CSV rows parsed'],
+  ['Tool router',(()=>{try{return !!toolRoute('calculate 2+2')&&toolRoute('calculate 2+2').type==='calc'&&!!toolRoute('remember that x')&&toolRoute('remember that x').type==='memory'&&!!toolRoute('add task: x')&&toolRoute('add task: x').type==='task'}catch{return false}})(),'Natural-language local commands route correctly'],
+  ['Theme router',(()=>{try{return toolRoute('set dark theme')?.type==='theme'&&toolRoute('set dark theme')?.value==='dark'}catch{return false}})(),'Theme command routes correctly'],
   ['Speech output','speechSynthesis' in window,'Browser speech synthesis available'],
-  ['Speech input',!!(window.SpeechRecognition||window.webkitSpeechRecognition),'Browser speech recognition available']
+  ['Speech input',!!(window.SpeechRecognition||window.webkitSpeechRecognition),'Browser speech recognition available'],
+  ['Gemini configuration',!!S.key||S.provider==='local',S.key?'Gemini key configured':'Local mode selected']
  ];
  const passed=checks.filter(x=>x[1]).length;
  const failed=checks.length-passed+(missing.length?1:0);
