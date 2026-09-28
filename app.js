@@ -41,6 +41,17 @@ function localBrain(t){
  if(/what time is it|current time/i.test(q))return 'It is '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+'.';
  return 'I can handle local commands right now. Connect Gemini in Settings when you want full natural-language reasoning, planning and conversation.';
 }
+async function geminiRequest(payload){
+ if(!S.key)throw Error('Gemini API key is not configured');
+ const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),45000);
+ try{
+  const u='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(S.model||'gemini-2.5-flash')+':generateContent?key='+encodeURIComponent(S.key);
+  const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(j.error?.message||('Gemini request failed ('+r.status+')'));
+  return j.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+ }catch(e){if(e.name==='AbortError')throw Error('Gemini request timed out after 45 seconds');throw e}finally{clearTimeout(timeout)}
+}
 async function geminiText(t){
  const history=S.messages.slice(-31,-1).map(m=>({role:m.role==='user'?'user':'model',parts:[{text:m.text}]}));
  const contents=[...history,{role:'user',parts:[{text:t}]}];
