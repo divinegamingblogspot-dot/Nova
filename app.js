@@ -71,7 +71,8 @@ $('#githubInfo')?.addEventListener('click',githubRepo);$('#githubContents')?.add
 $('#timerBtn')?.addEventListener('click',setTimer);$('#notifyBtn')?.addEventListener('click',requestNotify);
 $('#calendarBtn')?.addEventListener('click',makeICS);$('#mailBtn')?.addEventListener('click',makeMail);
 $('#dataFile')?.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const t=await fileRead(f);$('#dataOut').textContent=f.name.toLowerCase().endsWith('.csv')?csvReport(t):'Loaded '+f.name+' ('+t.length+' characters). For JSON: '+(t.trim().startsWith('{')||t.trim().startsWith('[')?'valid JSON candidate':'text data');log('Data file analyzed',f.name)});
-$('[data-info]').forEach(b=>b.addEventListener('click',()=>alert('Nova adapter status: this panel is functional locally. External provider actions require credentials/permission; the app will not fake a successful external action.')));\n$('#themeBtn')?.addEventListener('click',()=>{S.theme=S.theme==='dark'?'light':'dark';save();applyTheme();log('Theme changed',S.theme)});
+$('[data-info]').forEach(b=>b.addEventListener('click',()=>alert('Nova adapter status: this panel is functional locally. External provider actions require credentials/permission; the app will not fake a successful external action.')));
+$('#themeBtn')?.addEventListener('click',()=>{S.theme=S.theme==='dark'?'light':'dark';save();applyTheme();log('Theme changed',S.theme)});
 $('#autoSpeak')?.addEventListener('change',e=>{localStorage.novaAutoSpeak=e.target.checked?'1':'0';log('Auto speech',String(e.target.checked))});
 window.addEventListener('error',e=>{console.error(e.error||e.message);if($('#status'))$('#status').textContent='Ready'});
 window.addEventListener('unhandledrejection',e=>console.error(e.reason));
