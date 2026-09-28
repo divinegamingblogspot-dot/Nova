@@ -47,9 +47,9 @@ function fileRead(file){return new Promise((res,rej)=>{const fr=new FileReader()
 function stageFiles(files){const x=$('#fileList');if(!x)return;x.innerHTML='';[...files].forEach(f=>{const d=document.createElement('div');d.className='memory';d.textContent=f.name+' — '+Math.round(f.size/1024)+' KB';x.append(d)});log('Files staged',files.length+' file(s)')}
 $('#form')?.addEventListener('submit',e=>{e.preventDefault();send($('#input').value)});
 $('#new')?.addEventListener('click',()=>{S.messages=[];save();render();log('New conversation')});
-$$('.jump').forEach(b=>b.addEventListener('click',()=>{$('.nav').forEach(x=>x.classList.remove('active'));const v=b.dataset.v;$('.view').forEach(x=>x.classList.remove('active'));$('#'+v)?.classList.add('active');$('#title').textContent=v==='settings'?'Settings':v}));
-$('.nav').forEach(b=>b.addEventListener('click',()=>{$$('.nav').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.view').forEach(x=>x.classList.remove('active'));$('#'+b.dataset.v)?.classList.add('active');$('#title').textContent=b.textContent.trim()}));
-$$('[data-prompt]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.prompt)));
+$$('.jump').forEach(b=>b.addEventListener('click',()=>{$$('.nav').forEach(x=>x.classList.remove('active'));const v=b.dataset.v;$$('.view').forEach(x=>x.classList.remove('active'));$('#'+v)?.classList.add('active');$('#title').textContent=v==='settings'?'Settings':v}));
+$$('.nav').forEach(b=>b.addEventListener('click',()=>{$$$('.nav').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$$('.view').forEach(x=>x.classList.remove('active'));$('#'+b.dataset.v)?.classList.add('active');$('#title').textContent=b.textContent.trim()}));
+$$$('[data-prompt]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.prompt)));
 $('#voice')?.addEventListener('click',listen);$('#voiceStart')?.addEventListener('click',listen);$('#voiceLast')?.addEventListener('click',()=>{const m=[...S.messages].reverse().find(x=>x.role==='nova');if(m)speak(m.text)});
 $('#remember')?.addEventListener('click',()=>{const v=$('#memIn').value.trim();if(v){S.memory.push(v);$('#memIn').value='';save();renderMemory();log('Memory added',v)}});
 $('#exportMemory')?.addEventListener('click',exportMemory);
@@ -71,7 +71,7 @@ $('#githubInfo')?.addEventListener('click',githubRepo);$('#githubContents')?.add
 $('#timerBtn')?.addEventListener('click',setTimer);$('#notifyBtn')?.addEventListener('click',requestNotify);
 $('#calendarBtn')?.addEventListener('click',makeICS);$('#mailBtn')?.addEventListener('click',makeMail);
 $('#dataFile')?.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const t=await fileRead(f);$('#dataOut').textContent=f.name.toLowerCase().endsWith('.csv')?csvReport(t):'Loaded '+f.name+' ('+t.length+' characters). For JSON: '+(t.trim().startsWith('{')||t.trim().startsWith('[')?'valid JSON candidate':'text data');log('Data file analyzed',f.name)});
-$('[data-info]').forEach(b=>b.addEventListener('click',()=>alert('Nova adapter status: this panel is functional locally. External provider actions require credentials/permission; the app will not fake a successful external action.')));
+$$('[data-info]').forEach(b=>b.addEventListener('click',()=>alert('Nova adapter status: this panel is functional locally. External provider actions require credentials/permission; the app will not fake a successful external action.')));
 $('#themeBtn')?.addEventListener('click',()=>{S.theme=S.theme==='dark'?'light':'dark';save();applyTheme();log('Theme changed',S.theme)});
 $('#autoSpeak')?.addEventListener('change',e=>{localStorage.novaAutoSpeak=e.target.checked?'1':'0';log('Auto speech',String(e.target.checked))});
 window.addEventListener('error',e=>{console.error(e.error||e.message);if($('#status'))$('#status').textContent='Ready'});
