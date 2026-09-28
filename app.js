@@ -60,7 +60,7 @@ async function geminiText(t){
 }
 async function serverChat(t){
  const history=S.messages.slice(-31,-1).map(m=>({role:m.role==='user'?'user':'assistant',content:m.text}));
- const base=(S.serverUrl||'').replace(/\/$/,'');const r=await fetch((base||'')+'/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:S.provider,model:S.model,messages:[...history,{role:'user',content:t}],system:'You are Nova, a capable personal AI assistant. Be accurate and honest.'})});
+ const base=(S.serverUrl||'').replace(/\/$/,'');const r=await fetch((base||'')+'/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:S.provider,model:S.model,messages:[...history,{role:'user',content:t}],system:'You are Nova, a capable personal AI assistant. Be accurate and honest. Never claim an action happened unless the app confirms it. Known memory:\n- '+S.memory.join('\n- ')+'\nKnown knowledge:\n- '+S.knowledge.join('\n- ')})});
  const j=await r.json();if(!r.ok)throw Error(j.error||'Server AI unavailable');return j.text||'No response.';
 }
 function toolRoute(q){
