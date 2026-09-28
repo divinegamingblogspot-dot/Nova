@@ -1,0 +1,1 @@
+{"version":1,"tools":{"web.search":false,"github.read":false,"github.write":false,"files.read":true,"files.write":true,"email.send":false,"calendar.write":false,"automation.run":false},"confirmationRequired":["github.write","files.write","email.send","calendar.write","automation.run","external_account_change","delete","publish","purchase"],"auditAllActions":true}
