@@ -29,14 +29,14 @@ async function geminiRequest(body){if(!S.key)throw Error('No Gemini API key conf
 
 function toolRoute(q){
  const s=q.trim();
- if(/^calculate\\s+/i.test(s)) return {type:'calc',value:s.replace(/^calculate\\s+/i,'')};
- if(/^remember(?:\\s+that)?\\s+/i.test(s)) return {type:'memory',value:s.replace(/^remember(?:\\s+that)?\\s+/i,'')};
- if(/^search(?:\\s+the)?\\s+web\\s+for\\s+/i.test(s)) return {type:'web',value:s.replace(/^search(?:\\s+the)?\\s+web\\s+for\\s+/i,'')};
- if(/^(?:add|create)\\s+(?:a\\s+)?task[: ]/i.test(s)) return {type:'task',value:s.replace(/^(?:add|create)\\s+(?:a\\s+)?task[: ]/i,'')};
+ if(/^calculate\s+/i.test(s)) return {type:'calc',value:s.replace(/^calculate\s+/i,'')};
+ if(/^remember(?:\s+that)?\s+/i.test(s)) return {type:'memory',value:s.replace(/^remember(?:\s+that)?\s+/i,'')};
+ if(/^search(?:\s+the)?\s+web\s+for\s+/i.test(s)) return {type:'web',value:s.replace(/^search(?:\s+the)?\s+web\s+for\s+/i,'')};
+ if(/^(?:add|create)\s+(?:a\s+)?task[: ]/i.test(s)) return {type:'task',value:s.replace(/^(?:add|create)\s+(?:a\s+)?task[: ]/i,'')};
  if(/^note[: ]/i.test(s)) return {type:'note',value:s.replace(/^note[: ]/i,'')};
- const tm=s.match(/^(?:set\\s+)?timer\\s+for\\s+(\\d+(?:\\.\\d+)?)\\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)(?:\\s+(?:for|to)\\s+(.+))?$/i);
+ const tm=s.match(/^(?:set\s+)?timer\s+for\s+(\d+(?:\.\d+)?)\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)(?:\s+(?:for|to)\s+(.+))?$/i);
  if(tm) return {type:'timer',minutes:tm[2].toLowerCase().startsWith('hour')||tm[2].toLowerCase().startsWith('hr')?Number(tm[1])*60:tm[2].toLowerCase().startsWith('sec')?Number(tm[1])/60:Number(tm[1]),label:tm[3]||'Nova timer'};
- if(/^(?:switch|set)\\s+(dark|light|day|night)\\s+(?:theme)?$/i.test(s)) return {type:'theme',value:s.match(/(dark|light|day|night)/i)[1].toLowerCase()};
+ if(/^(?:switch|set)\s+(dark|light|day|night)\s+(?:theme)?$/i.test(s)) return {type:'theme',value:s.match(/(dark|light|day|night)/i)[1].toLowerCase()};
  return null;
 }
 async function send(t){t=String(t||'').trim();if(!t)return;msg('user',t);const input=$('#input');if(input)input.value='';let r;try{const tr=toolRoute(t);if(tr?.type==='calc')r=String(safeCalc(tr.value));else if(tr?.type==='memory'){const m=tr.value.trim();if(m){S.memory.push(m);save();renderMemory();r='I’ll remember that: '+m}else r='Tell me what to remember.'}else if(tr?.type==='web'){await webSearch(tr.value);r='I searched the Web panel for: '+tr.value}
