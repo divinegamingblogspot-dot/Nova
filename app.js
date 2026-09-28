@@ -1,14 +1,14 @@
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const readJSON=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(f))}catch{return f}};
 const S={
- provider:localStorage.novaProvider||'local',key:localStorage.novaKey||'',model:localStorage.novaModel||'gemini-2.5-flash',
+ provider:localStorage.novaProvider||'local',serverUrl:localStorage.novaServerUrl||'',key:localStorage.novaKey||'',model:localStorage.novaModel||'gemini-2.5-flash',
  messages:readJSON('novaMessages',[]),memory:readJSON('novaMemory',[]),notes:readJSON('novaNotes',[]),
  knowledge:readJSON('novaKnowledge',[]),tasks:readJSON('novaTasks',[]),activity:readJSON('novaActivity',[]),
  permissions:{web:false,github:false,email:false,calendar:false,automation:false,...readJSON('novaPermissions',{})},
  theme:localStorage.novaTheme||'dark',timers:readJSON('novaTimers',[]),busy:false
 };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function save(){localStorage.novaConversationId=S.conversationId;for(const k of ['messages','memory','notes','knowledge','tasks','activity','permissions','timers'])localStorage.setItem('nova'+k[0].toUpperCase()+k.slice(1),JSON.stringify(S[k]));localStorage.novaProvider=S.provider;localStorage.novaModel=S.model;localStorage.novaTheme=S.theme}
+function save(){localStorage.novaServerUrl=S.serverUrl;localStorage.novaConversationId=S.conversationId;for(const k of ['messages','memory','notes','knowledge','tasks','activity','permissions','timers'])localStorage.setItem('nova'+k[0].toUpperCase()+k.slice(1),JSON.stringify(S[k]));localStorage.novaProvider=S.provider;localStorage.novaModel=S.model;localStorage.novaTheme=S.theme}
 function log(action,detail=''){S.activity.unshift({time:new Date().toLocaleString(),action,detail});S.activity=S.activity.slice(0,300);save();renderActivity()}
 function render(){renderMessages();renderMemory();renderKnowledge();renderTasks();renderActivity();renderHistory();renderPermissions();renderNotes();renderTimers();updateClock();applyTheme()}
 function renderMessages(){const b=$('#messages');if(!b)return;b.innerHTML=S.messages.slice(-100).map(m=>'<div class="msg '+esc(m.role)+'">'+esc(m.text)+'</div>').join('');b.scrollTop=b.scrollHeight}
@@ -46,7 +46,7 @@ async function geminiText(t){
 }
 async function serverChat(t){
  const history=S.messages.slice(-31,-1).map(m=>({role:m.role==='user'?'user':'assistant',content:m.text}));
- const r=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:S.provider,model:S.model,messages:[...history,{role:'user',content:t}],system:'You are Nova, a capable personal AI assistant. Be accurate and honest.'})});
+ const base=(S.serverUrl||'').replace(/\/$/,'');const r=await fetch((base||'')+'/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:S.provider,model:S.model,messages:[...history,{role:'user',content:t}],system:'You are Nova, a capable personal AI assistant. Be accurate and honest.'})});
  const j=await r.json();if(!r.ok)throw Error(j.error||'Server AI unavailable');return j.text||'No response.';
 }
 function toolRoute(q){
@@ -114,7 +114,7 @@ $('#visionFile')?.addEventListener('change',async e=>{const f=e.target.files[0],
 $('#analyzeCode')?.addEventListener('click',async()=>{const c=$('#codeIn').value;if(!c)return;let out='Local scan: '+c.split('\\n').length+' lines, '+c.length+' characters.';if(S.provider==='gemini'&&S.key)try{out+='\\n\\nAI review:\\n'+await geminiText('Review this code for bugs, security issues and improvements. Be concrete.\\n\\n'+c)}catch(e){out+='\\nAI review unavailable: '+e.message}$('#codeOut').textContent=out;log('Code analyzed locally')});
 $('#addTask')?.addEventListener('click',addTask);
 $('#clearHistory')?.addEventListener('click',()=>{if(confirm('Clear conversation?')){S.messages=[];save();render();log('Conversation cleared')}});
-$('#save')?.addEventListener('click',()=>{S.provider=$('#provider').value;S.key=$('#key').value.trim();S.model=$('#model').value.trim()||'gemini-2.5-flash';localStorage.novaProvider=S.provider;localStorage.novaKey=S.key;localStorage.novaModel=S.model;updateProviderStatus();if($('#providerOut'))$('#providerOut').textContent=S.provider==='gemini'?(S.key?'Gemini key saved locally. Test the connection before chatting.':'Gemini selected — add your API key.'):'Local tools selected.';log('Provider settings changed',S.provider)});
+$('#save')?.addEventListener('click',()=>{S.provider=$('#provider').value;S.key=$('#key').value.trim();S.model=$('#model').value.trim()||'gemini-2.5-flash';S.serverUrl=$('#serverUrl').value.trim();localStorage.novaProvider=S.provider;localStorage.novaKey=S.key;localStorage.novaModel=S.model;updateProviderStatus();if($('#providerOut'))$('#providerOut').textContent=S.provider==='gemini'?(S.key?'Gemini key saved locally. Test the connection before chatting.':'Gemini selected — add your API key.'):'Local tools selected.';log('Provider settings changed',S.provider)});
 $('#forget')?.addEventListener('click',()=>{$('#key').value='';S.key='';localStorage.removeItem('novaKey');updateProviderStatus();if($('#providerOut'))$('#providerOut').textContent='Gemini key removed from this browser.';log('Gemini key forgotten')});
 $('#testGemini')?.addEventListener('click',async()=>{const out=$('#providerOut');if(out)out.textContent='Testing Gemini…';try{const r=await geminiRequest({contents:[{role:'user',parts:[{text:'Reply with exactly: Nova connection successful.'}]}]});if(out)out.textContent='✓ '+r;log('Gemini connection test passed')}catch(e){if(out)out.textContent='✕ Gemini test failed: '+e.message;log('Gemini connection test failed',e.message)}});
 $('#resetPermissions')?.addEventListener('click',()=>{S.permissions={web:false,github:false,email:false,calendar:false,automation:false};save();renderPermissions();log('Permissions reset')});
@@ -152,4 +152,4 @@ function runDiagnostics(){
  return {passed,failed,detail};
 }
 function restoreTimers(){const now=Date.now();S.timers=S.timers.filter(t=>t.when>now);S.timers.forEach(t=>{t.id=setTimeout(()=>{alert('Nova: '+t.label);if('Notification'in window&&Notification.permission==='granted')new Notification('Nova timer',{body:t.label});S.timers=S.timers.filter(x=>x!==t);save();renderTimers();log('Timer fired',t.label)},Math.max(0,t.when-Date.now()))});save()}
-applyTheme();restoreTimers();if($('#provider'))$('#provider').value=S.provider;if($('#key'))$('#key').value=S.key;if($('#model'))$('#model').value=S.model;if($('#autoSpeak'))$('#autoSpeak').checked=localStorage.novaAutoSpeak==='1';setInterval(updateClock,1000);render();updateProviderStatus();
+applyTheme();restoreTimers();if($('#provider'))$('#provider').value=S.provider;if($('#key'))$('#key').value=S.key;if($('#model'))$('#model').value=S.model;if($('#autoSpeak'))$('#autoSpeak').checked=localStorage.novaAutoSpeak==='1';if($('#serverUrl'))$('#serverUrl').value=S.serverUrl;setInterval(updateClock,1000);render();updateProviderStatus();
