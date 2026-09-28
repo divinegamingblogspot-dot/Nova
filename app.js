@@ -56,8 +56,8 @@ function stageFiles(files){const x=$('#fileList');if(!x)return;x.innerHTML='';[.
 $('#form')?.addEventListener('submit',e=>{e.preventDefault();send($('#input').value)});
 $('#new')?.addEventListener('click',()=>{S.messages=[];save();render();log('New conversation')});
 $$('.jump').forEach(b=>b.addEventListener('click',()=>{$$('.nav').forEach(x=>x.classList.remove('active'));const v=b.dataset.v;$$('.view').forEach(x=>x.classList.remove('active'));$('#'+v)?.classList.add('active');$('#title').textContent=v==='settings'?'Settings':v}));
-$$('.nav').forEach(b=>b.addEventListener('click',()=>{$$$('.nav').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$$('.view').forEach(x=>x.classList.remove('active'));$('#'+b.dataset.v)?.classList.add('active');$('#title').textContent=b.textContent.trim()}));
-$$$('[data-prompt]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.prompt)));
+$$('.nav').forEach(b=>b.addEventListener('click',()=>{$('.nav').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('.view').forEach(x=>x.classList.remove('active'));$('#'+b.dataset.v)?.classList.add('active');$('#title').textContent=b.textContent.trim()}));
+$('[data-prompt]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.prompt)));
 $('#voice')?.addEventListener('click',listen);$('#voiceStart')?.addEventListener('click',listen);$('#voiceLast')?.addEventListener('click',()=>{const m=[...S.messages].reverse().find(x=>x.role==='nova');if(m)speak(m.text)});
 $('#remember')?.addEventListener('click',()=>{const v=$('#memIn').value.trim();if(v){S.memory.push(v);$('#memIn').value='';save();renderMemory();log('Memory added',v)}});
 $('#exportMemory')?.addEventListener('click',exportMemory);
