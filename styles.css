@@ -22,3 +22,6 @@ html[data-theme="light"] textarea,html[data-theme="light"] input,html[data-theme
 .eyes i:after{content:'';position:absolute;left:2px;top:-6px;width:25px;height:7px;border-top:2px solid #3a2440;border-radius:50%;background:none;margin:0}
 .head .mouth{top:119px;width:23px;height:8px;border-bottom:2px solid #a95d72}
 .head .mouth:after{content:'';position:absolute;left:-23px;top:-9px;width:13px;height:8px;border-radius:50%;background:#e98e9b33;box-shadow:42px 0 #e98e9b33}
+
+.model-badge{font:700 9px ui-monospace,monospace;letter-spacing:1px;padding:6px 8px;border:1px solid var(--line);border-radius:999px;color:var(--b);background:var(--p2)}
+.typing{display:none;align-items:center;gap:5px;color:var(--muted);font-size:11px;padding:4px 4px 10px}.typing.show{display:flex}.typing span{width:5px;height:5px;border-radius:50%;background:var(--b);animation:dot 1s infinite ease-in-out}.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}.typing b{font-weight:500;margin-left:4px}@keyframes dot{50%{opacity:.25;transform:translateY(-3px)}}
