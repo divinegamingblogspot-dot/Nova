@@ -8,3 +8,17 @@ html[data-theme="light"] body{background:radial-gradient(circle at 75% 5%,#e5ddf
 html[data-theme="light"] aside{background:#ffffffdd}
 html[data-theme="light"] .hero,html[data-theme="light"] .panel,html[data-theme="light"] .cards article{background:#ffffffdd}
 html[data-theme="light"] textarea,html[data-theme="light"] input,html[data-theme="light"] select,html[data-theme="light"] .output{background:#fff;color:var(--txt)}
+
+/* Nova face v2 — polished animated character model */
+.avatar{overflow:visible}
+.avatar:after{content:'';position:absolute;width:118px;height:54px;bottom:4px;border-radius:50% 50% 18% 18%;background:linear-gradient(180deg,#30234b,#171426);filter:drop-shadow(0 16px 18px #0007);z-index:0}
+.head{z-index:2;width:132px;height:154px;border-radius:48% 48% 44% 44%;background:linear-gradient(145deg,#ffe9e4 0%,#f3c9cb 58%,#d99aa8 100%);box-shadow:0 14px 38px #0008,inset -10px -10px 20px #b96f8622}
+.head:before{content:'';position:absolute;left:-8px;top:65px;width:12px;height:26px;border-radius:50%;background:#edb9be;box-shadow:136px 0 #edb9be}
+.head:after{content:'';position:absolute;left:48%;top:88px;width:9px;height:15px;border-left:2px solid #bc7b88;border-bottom:2px solid #bc7b88;border-radius:0 0 0 7px;opacity:.65}
+.hair{inset:-16px -13px 54px;background:linear-gradient(135deg,#211a2e 0%,#4d2c57 48%,#24182f 100%);border-radius:52% 52% 30% 30%;clip-path:polygon(0 0,100% 0,97% 42%,90% 70%,78% 49%,72% 96%,57% 58%,49% 88%,38% 53%,27% 96%,19% 56%,5% 78%);box-shadow:inset 0 8px 14px #ffffff12}
+.eyes{top:67px;left:25px;right:25px;z-index:3}
+.eyes i{position:relative;width:29px;height:19px;border:0;border-bottom:3px solid #4a2b45;border-radius:50%}
+.eyes i:before{content:'';position:absolute;left:8px;top:1px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 62% 35%,#fff 0 12%,#6f4aa4 14% 48%,#211633 50% 100%);box-shadow:0 0 5px #8e6bd988}
+.eyes i:after{content:'';position:absolute;left:2px;top:-6px;width:25px;height:7px;border-top:2px solid #3a2440;border-radius:50%;background:none;margin:0}
+.head .mouth{top:119px;width:23px;height:8px;border-bottom:2px solid #a95d72}
+.head .mouth:after{content:'';position:absolute;left:-23px;top:-9px;width:13px;height:8px;border-radius:50%;background:#e98e9b33;box-shadow:42px 0 #e98e9b33}
