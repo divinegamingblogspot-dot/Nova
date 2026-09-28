@@ -92,6 +92,7 @@ $('#dataFile')?.addEventListener('change',async e=>{const f=e.target.files[0];if
 $$('[data-info]').forEach(b=>b.addEventListener('click',()=>alert('Nova adapter status: this panel is functional locally. External provider actions require credentials/permission; the app will not fake a successful external action.')));
 $('#themeBtn')?.addEventListener('click',()=>{S.theme=S.theme==='dark'?'light':'dark';save();applyTheme();log('Theme changed',S.theme)});
 $('#autoSpeak')?.addEventListener('change',e=>{localStorage.novaAutoSpeak=e.target.checked?'1':'0';log('Auto speech',String(e.target.checked))});
+$('#runDiagnostics')?.addEventListener('click',runDiagnostics);
 window.addEventListener('error',e=>{console.error(e.error||e.message);if($('#status'))$('#status').textContent='Error: '+(e.message||'runtime error')});
 window.addEventListener('unhandledrejection',e=>{console.error(e.reason);if($('#status'))$('#status').textContent='Error: '+(e.reason?.message||e.reason||'unhandled rejection')});
 function runDiagnostics(){
