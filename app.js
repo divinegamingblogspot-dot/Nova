@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const readJSON=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(f))}catch{return f}};
 const S={
  provider:localStorage.novaProvider||'local',serverUrl:localStorage.novaServerUrl||'',key:localStorage.novaKey||'',model:localStorage.novaModel||'gemini-2.5-flash',
- messages:readJSON('novaMessages',[]),memory:readJSON('novaMemory',[]),notes:readJSON('novaNotes',[]),
+ conversationId:localStorage.novaConversationId||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now())),messages:readJSON('novaMessages',[]),memory:readJSON('novaMemory',[]),notes:readJSON('novaNotes',[]),
  knowledge:readJSON('novaKnowledge',[]),tasks:readJSON('novaTasks',[]),activity:readJSON('novaActivity',[]),
  permissions:{web:false,github:false,email:false,calendar:false,automation:false,...readJSON('novaPermissions',{})},
  theme:localStorage.novaTheme||'dark',timers:readJSON('novaTimers',[]),busy:false
@@ -21,6 +21,9 @@ function renderActivity(){const x=$('#activityList');if(!x)return;x.innerHTML=S.
 function renderHistory(){const x=$('#historyList');if(!x)return;x.innerHTML=S.messages.length?'<p>'+S.messages.length+' messages in this conversation.</p><button id="historyExport">Export conversation</button>':'<p>No conversation yet.</p>';$('#historyExport')?.addEventListener('click',()=>download('nova-conversation.json',JSON.stringify(S.messages,null,2)))}
 function renderPermissions(){const x=$('#permissionList');if(!x)return;x.innerHTML=Object.entries(S.permissions).map(([k,v])=>'<label class="memory"><span>'+esc(k)+'</span><input type="checkbox" data-perm="'+esc(k)+'" '+(v?'checked':'')+'></label>').join('');x.querySelectorAll('[data-perm]').forEach(b=>b.onchange=()=>{S.permissions[b.dataset.perm]=b.checked;save();log('Permission changed',b.dataset.perm+': '+b.checked)})}
 function msg(role,text){S.messages.push({role,text,time:Date.now()});save();renderMessages();if(role==='nova'&&localStorage.novaAutoSpeak==='1')speak(text)}
+function addMemory(v){v=String(v||'').trim();if(!v)return false;if(!S.memory.some(x=>x.toLowerCase()===v.toLowerCase())){S.memory.unshift(v);S.memory=S.memory.slice(0,200);save();renderMemory();log('Memory added',v);return true}return false}
+function addTaskText(v){v=String(v||'').trim();if(!v)return false;if(!S.tasks.some(x=>x.text.toLowerCase()===v.toLowerCase()&&!x.done)){S.tasks.push({text:v,done:false,createdAt:Date.now()});save();renderTasks();log('Task added',v);return true}return false}
+function completeTask(q){const n=String(q||'').trim().toLowerCase();const i=S.tasks.findIndex(x=>!x.done&&(x.text.toLowerCase()===n||x.text.toLowerCase().includes(n)));if(i<0)return false;S.tasks[i].done=true;S.tasks[i].completedAt=Date.now();save();renderTasks();log('Task completed',S.tasks[i].text);return S.tasks[i].text}
 function download(name,data,type='application/json'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function safeCalc(x){x=String(x||'').trim();if(!/^[0-9+\-*/().%\s]+$/.test(x))throw Error('Only arithmetic is allowed');return Function('"use strict";return ('+x+')')()}
 function localBrain(t){
@@ -51,14 +54,21 @@ async function serverChat(t){
 }
 function toolRoute(q){
  const s=q.trim();
- if(/^calculate\s+/i.test(s)) return {type:'calc',value:s.replace(/^calculate\s+/i,'')};
- if(/^remember(?:\s+that)?\s+/i.test(s)) return {type:'memory',value:s.replace(/^remember(?:\s+that)?\s+/i,'')};
- if(/^search(?:\s+the)?\s+web\s+for\s+/i.test(s)) return {type:'web',value:s.replace(/^search(?:\s+the)?\s+web\s+for\s+/i,'')};
- if(/^(?:add|create)\s+(?:a\s+)?task[: ]/i.test(s)) return {type:'task',value:s.replace(/^(?:add|create)\s+(?:a\s+)?task[: ]/i,'')};
+ if(/^calculate\\s+/i.test(s)) return {type:'calc',value:s.replace(/^calculate\\s+/i,'')};
+ if(/^remember(?:\\s+that)?\\s+/i.test(s)) return {type:'memory',value:s.replace(/^remember(?:\\s+that)?\\s+/i,'')};
+ if(/^forget (?:that )?/i.test(s)) return {type:'forget',value:s.replace(/^forget (?:that )?/i,'')};
+ if(/^clear (?:all )?memory$/i.test(s)) return {type:'clearMemory'};
+ if(/^(?:show|list) (?:my )?tasks$/i.test(s)) return {type:'listTasks'};
+ if(/^(?:show|list) (?:my )?notes$/i.test(s)) return {type:'listNotes'};
+ if(/^(?:complete|finish|done) (?:task[: ]?)(.+)$/i.test(s)) return {type:'completeTask',value:s.replace(/^(?:complete|finish|done) (?:task[: ]?)/i,'')};
+ if(/^(?:add|create) (?:a )?task[: ]/i.test(s)) return {type:'task',value:s.replace(/^(?:add|create) (?:a )?task[: ]/i,'')};
  if(/^note[: ]/i.test(s)) return {type:'note',value:s.replace(/^note[: ]/i,'')};
- const tm=s.match(/^(?:set\s+)?timer\s+for\s+(\d+(?:\.\d+)?)\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)(?:\s+(?:for|to)\s+(.+))?$/i);
- if(tm) return {type:'timer',minutes:tm[2].toLowerCase().startsWith('hour')||tm[2].toLowerCase().startsWith('hr')?Number(tm[1])*60:tm[2].toLowerCase().startsWith('sec')?Number(tm[1])/60:Number(tm[1]),label:tm[3]||'Nova timer'};
- if(/^(?:switch|set)\s+(dark|light|day|night)\s+(?:theme)?$/i.test(s)) return {type:'theme',value:s.match(/(dark|light|day|night)/i)[1].toLowerCase()};
+ if(/^search(?: the)? web for /i.test(s)) return {type:'web',value:s.replace(/^search(?: the)? web for /i,'')};
+ if(/^search github for /i.test(s)) return {type:'githubSearch',value:s.replace(/^search github for /i,'')};
+ if(/^json(?: pretty)?[: ]/i.test(s)) return {type:'json',value:s.replace(/^json(?: pretty)?[: ]/i,'')};
+ const tm=s.match(/^(?:set )?timer for (\\d+(?:\\.\\d+)?)\\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)(?:\\s+(?:for|to)\\s+(.+))?$/i);
+ if(tm)return {type:'timer',minutes:tm[2].toLowerCase().startsWith('hour')||tm[2].toLowerCase().startsWith('hr')?Number(tm[1])*60:tm[2].toLowerCase().startsWith('sec')?Number(tm[1])/60:Number(tm[1]),label:tm[3]||'Nova timer'};
+ if(/^(?:switch|set) (dark|light|day|night)(?: theme)?$/i.test(s))return {type:'theme',value:s.match(/(dark|light|day|night)/i)[1].toLowerCase()};
  return null;
 }
 async function send(t){
@@ -67,9 +77,9 @@ async function send(t){
  try{
   const tr=toolRoute(t);
   if(tr?.type==='calc')r=String(safeCalc(tr.value));
-  else if(tr?.type==='memory'){const m=tr.value.trim();if(m){S.memory.push(m);save();renderMemory();r='I’ll remember that: '+m}else r='Tell me what to remember.'}
-  else if(tr?.type==='web'){await webSearch(tr.value);r='I searched the Web panel for: '+tr.value}
-  else if(tr?.type==='task'){S.tasks.push({text:tr.value,done:false});save();renderTasks();r='Task added: '+tr.value;log('Task added',tr.value)}
+  else if(tr?.type==='memory'){const m=tr.value.trim();r=addMemory(m)?'I’ll remember that: '+m:(m?'I already had that memory.':'Tell me what to remember.')}else if(tr?.type==='forget'){const m=tr.value.trim().toLowerCase(),before=S.memory.length;S.memory=S.memory.filter(x=>!x.toLowerCase().includes(m));save();renderMemory();r=before===S.memory.length?'I could not find that memory.':'Forgot matching memory.'}else if(tr?.type==='clearMemory'){S.memory=[];save();renderMemory();r='All saved memory has been cleared.'}else if(tr?.type==='listTasks'){r=S.tasks.length?'Tasks:\n'+S.tasks.map((x,i)=>(i+1)+'. '+(x.done?'✓':'○')+' '+x.text).join('\n'):'You have no tasks.'}else if(tr?.type==='listNotes'){r=S.notes.length?'Notes:\n• '+S.notes.join('\n• '):'You have no notes.'}else if(tr?.type==='completeTask'){const done=completeTask(tr.value);r=done?'Completed: '+done:'I could not find that task.'}
+  else if(tr?.type==='web'){await webSearch(tr.value);r='I searched the Web panel for: '+tr.value}else if(tr?.type==='githubSearch'){const u='https://api.github.com/search/repositories?q='+encodeURIComponent(tr.value);const rr=await fetch(u);const jj=await rr.json();if(!rr.ok)throw Error(jj.message||'GitHub search failed');r=(jj.items||[]).slice(0,5).map(x=>x.full_name+' — ★'+x.stargazers_count+' — '+(x.description||'')).join('\n')||'No GitHub repositories found.';log('GitHub search',tr.value)}else if(tr?.type==='json'){try{r=JSON.stringify(JSON.parse(tr.value),null,2)}catch{r='That is not valid JSON.'}}
+  else if(tr?.type==='task'){r=addTaskText(tr.value)?'Task added: '+tr.value:'That task is already on your list.'}
   else if(tr?.type==='note'){S.notes.push(tr.value);save();renderNotes();r='Note saved: '+tr.value;log('Note saved',tr.value)}
   else if(tr?.type==='timer'){const when=Date.now()+tr.minutes*60000,label=tr.label,timer={label,when,id:null};timer.id=setTimeout(()=>{alert('Nova: '+label);if('Notification'in window&&Notification.permission==='granted')new Notification('Nova timer',{body:label});S.timers=S.timers.filter(x=>x!==timer);save();renderTimers();log('Timer fired',label)},tr.minutes*60000);S.timers.push(timer);save();renderTimers();r='Timer set for '+tr.minutes+' minute(s): '+label;log('Timer created',label)}
   else if(tr?.type==='theme'){S.theme=(tr.value==='day'||tr.value==='light')?'light':'dark';save();applyTheme();r='Theme changed to '+S.theme;log('Theme changed',S.theme)}
